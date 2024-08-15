@@ -8,48 +8,132 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sstream>
+#include <asio/io_context.hpp>
+#include <asio/completion_condition.hpp>
+#include <asio/connect.hpp>
+#include <asio/error_code.hpp>
+#include <asio/io_context.hpp>
+#include <asio/read.hpp>
+#include <asio/read_until.hpp>
+#include <asio/registered_buffer.hpp>
+#include <asio/streambuf.hpp>
+#include <asio/write.hpp>
+#include <asio/error_code.hpp>
+#include <asio/io_context.hpp>
+#include <asio/ip/tcp.hpp>
+#include <asio/io_context.hpp>
+#include <asio/ip/tcp.hpp>
+#include <asio/write.hpp>
+#include <asio/write.hpp>
+#include <asio/read.hpp>
+#include <asio/streambuf.hpp>
+#include <asio/read_until.hpp>
+#include <asio/use_future.hpp>
+using asio::ip::tcp;
+
+
+const int kBufferSize = 1024;
+
+void Err (const asio::error_code& ec){
+  std::cout << "Error: " << ec.message () << std::endl;
+}
+
+class Connection : public std::enable_shared_from_this<Connection> {
+public:
+  Connection (asio::io_context& io_context) :
+  socket_ (io_context)
+  {}
+
+  //getters
+  tcp::socket& get_socket () { return socket_ ; }
+
+  void init () { // init the connection
+    read_data ();
+  }
+
+  void read_data () {
+    auto self(shared_from_this());
+    socket_.async_read_some ( // read from client
+      asio::buffer(buffer_),
+      [this, self] (const asio::error_code& ec, std::size_t len) {
+        if (!ec) {
+          buffer_ [len] = '\0';
+          std::cout << buffer_ << std::endl;
+          
+          std::string message = "+PONG\r\n";
+          write_data (message); // reply to client
+        }
+        else Err (ec);
+      }
+    );
+  }
+
+  void write_data (const std::string& message){
+    auto self (shared_from_this());
+
+    asio::async_write ( // reply to client
+      socket_ , asio::buffer (message),
+      [this,self] (const asio::error_code& ec, std::size_t len) {
+        if (!ec) {
+          read_data (); // read from client
+        }
+        else Err (ec);
+      }
+    );
+  }
+
+private:
+  tcp::socket socket_; // the connection client
+  char buffer_ [kBufferSize]; // buffer for input
+};
+
+class Server {
+public:
+
+
+  Server (asio::io_context& io_context) :
+  io_context (io_context),
+  acceptor_ (io_context, tcp::endpoint(tcp::v4(), 6379))
+  {
+    accept_connection ();  
+  }
+
+
+private:
+
+  //init a newConnection and bind a client to it
+  void accept_connection (){
+    auto newConnection = std::make_shared <Connection> (io_context);
+    acceptor_.async_accept (
+      newConnection->get_socket(),
+      [this, newConnection] (const asio::error_code& ec) {
+        if (!ec) {
+          newConnection -> init ();
+        }
+        else Err (ec);
+        accept_connection (); // Accept the next connection
+      }
+    );
+  }
+
+  asio::io_context& io_context;
+  tcp::acceptor acceptor_;
+};
+
+
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  std::cout << "Logs from your program will appear here!\n";
-
-   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-   if (server_fd < 0) {
-    std::cerr << "Failed to create server socket\n";
-    return 1;
-   }
-  
-   int reuse = 1;
-   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-     std::cerr << "setsockopt failed\n";
-     return 1;
-   }
-
-   struct sockaddr_in server_addr;
-   server_addr.sin_family = AF_INET;
-   server_addr.sin_addr.s_addr = INADDR_ANY;
-   server_addr.sin_port = htons(6379);
-
-   if (bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) != 0) {
-     std::cerr << "Failed to bind to port 6379\n";
-     return 1;
-   }
-
-  int connection_backlog = 5;
-   if (listen(server_fd, connection_backlog) != 0) {
-     std::cerr << "listen failed\n";
-     return 1;
-   }
-
-   struct sockaddr_in client_addr;
-   int client_addr_len = sizeof(client_addr);
-   std::cout << "Waiting for a client to connect...\n";
-   int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-   std::cout << "Client connected\n";
-
-   close(server_fd);
+  try {
+    asio::io_context io_context; 
+    Server server (io_context);
+    io_context.run();
+  }
+  catch (std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+  }
 
   return 0;
 }
