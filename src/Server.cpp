@@ -49,7 +49,7 @@ void Err (const asio::error_code& ec){
 }
 
 long long getime (int inf = 0){
-  if (inf == -1) return 1e9;
+  if (inf == -1) return LLONG_MAX;
   auto now = std::chrono::system_clock::now();
   auto now_in_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
   auto value = now_in_ms.time_since_epoch();
@@ -71,7 +71,7 @@ public:
   std::optional <std::string> get (const std::string& key) {
     auto ans = database_ .find (key);
     if (ans == database_.end ()) return std::nullopt;
-    if (ans->second.second > getime ()) {
+    if (ans->second.second < getime ()) {
       database_. erase (key);
       return std::nullopt;
     }
@@ -148,9 +148,10 @@ private:
   }
 
   void get_ () {
-    std::optional <std::string> key = DataBase_->get (command_[1]);
-    if (key.has_value()){
-      std::string ans = std::move (key.value());
+    std::cout << "here " << std::endl;
+    std::optional <std::string> value = DataBase_->get (command_[1]);
+    if (value.has_value()){
+      std::string ans = value.value();
       ss << "$" << ans.size() << "\r\n" << ans << "\r\n";
     }
     else {
