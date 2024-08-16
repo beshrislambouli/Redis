@@ -310,8 +310,22 @@ private:
     asio::error_code ec;
     asio::connect(socket, endpoint, ec);
 
-    std::string message = "*1\r\n$4\r\nPING\r\n";
+    std::string message;
+    asio::streambuf reply;
+
+    
+    message = "*1\r\n$4\r\nPING\r\n";
     asio::write(socket, asio::buffer(message), ec);
+    asio::read_until(socket, reply, "\r\n");
+
+    message = "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n";
+    asio::write(socket, asio::buffer(message), ec);
+    asio::read_until(socket, reply, "\r\n");
+
+    message = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n";
+    asio::write(socket, asio::buffer(message), ec);
+    asio::read_until(socket, reply, "\r\n");
+
   }
 
   asio::io_context& io_context;
