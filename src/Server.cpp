@@ -172,6 +172,9 @@ public:
     else if (ty == "replconf") {
       replconf_ ();
     }
+    else if (ty == "psync") {
+      psync_ ();
+    }
   }
 private:
 
@@ -213,6 +216,10 @@ private:
 
   void replconf_ () {
     ss << "+OK\r\n";
+  }
+  
+  void psync_ () {
+    ss << "+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n";
   }
 
   std::stringstream ss;
