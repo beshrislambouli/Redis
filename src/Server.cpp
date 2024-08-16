@@ -58,6 +58,7 @@ long long getime (int inf = 0){
 }
 
 
+
 class DataBase {
 public:
   DataBase () {
@@ -225,15 +226,29 @@ private:
 
 
 
+struct ServerInfo {
+  int port = 6379; //default port
+};
 
+ServerInfo Arg_Parser (int argc, char **argv) {
+  ServerInfo ret;
+  for ( int i = 0 ; i < argc ; i ++ ) {
+    std::string arg = std::string (argv[i]);
+    if (arg == "--port") {
+      ret.port = std::stoi (argv[i+1]);
+    }
+  }
+  return ret;
+}
 class Server {
 public:
 
 
-  Server (asio::io_context& io_context) :
+  Server (asio::io_context& io_context, const ServerInfo& ServerInfo_) :
   io_context (io_context),
-  acceptor_ (io_context, tcp::endpoint(tcp::v4(), 6379)),
-  DataBase_ (std::make_shared <DataBase> ())
+  acceptor_ (io_context, tcp::endpoint(tcp::v4(), ServerInfo_.port)),
+  DataBase_ (std::make_shared <DataBase> ()),
+  ServerInfo_ (ServerInfo_)
   {
     accept_connection ();  
   }
@@ -259,6 +274,7 @@ private:
   asio::io_context& io_context;
   tcp::acceptor acceptor_;
   std::shared_ptr <DataBase> DataBase_ ;
+  ServerInfo ServerInfo_;
 };
 
 
@@ -266,10 +282,11 @@ int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
+  
 
   try {
     asio::io_context io_context; 
-    Server server (io_context);
+    Server server (io_context, Arg_Parser (argc, argv));
     io_context.run();
   }
   catch (std::exception& e) {
