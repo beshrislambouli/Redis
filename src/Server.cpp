@@ -251,9 +251,17 @@ public:
       [this, self] (const asio::error_code& ec, std::size_t len) {
         if (!ec) {
           buffer_ [len] = '\0';
-          std:: cout << buffer_ << std::endl;
+          std::cout << "read " << buffer_ << std::endl;
           std::string reply = command_handler_.handle_command (buffer_);
           write_data (reply); // reply to client
+
+          // TODO: hard coded for now
+          if ( std::string (buffer_) == "*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n") {
+            reply = "$66\r\n\x52\x45\x44\x49\x53\x30\x30\x31\x31\xfa\x09\x72\x65\x64\x69\x73\x2d\x76\x65\x72\x05\x37\x2e\x32\x2e\x30\xfa\x0a\x72\x65\x64\x69\x73\x2d\x62\x69\x74\x73\xc0\x40\xfa\x05\x63\x74\x69\x6d\x65\xc2\x6d\x08\xbc\x65\xfa\x08\x75\x73\x65\x64\x2d\x6d\x65\x6d\xc2\xb0\xc4\x10\x00\xfa\x08\x61\x6f\x66\x2d\x62\x61\x73\x65\xc0\x00\xff\xf0\x6e\x3b\xfe\xc0\xff\x5a\xa2";
+            write_data (reply);
+          }
+
+
         }
         else Err (ec);
       }
@@ -262,6 +270,7 @@ public:
 
   void write_data (const std::string& message) {
     auto self (shared_from_this());
+    std::cout << "to send " << message << std::endl;
     asio::async_write ( // reply to client
       socket_ , asio::buffer (message),
       [this,self] (const asio::error_code& ec, std::size_t len) {
@@ -341,6 +350,9 @@ private:
       int num_bytes = asio::read_until(socket, reply, "\r\n");
       reply.consume(num_bytes);
     }
+
+    int num_bytes = asio::read_until(socket, reply, "\r\n");
+    reply.consume(num_bytes);
 
     MasterConnection_ -> init ();
   }
