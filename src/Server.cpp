@@ -59,6 +59,24 @@ long long getime (int inf = 0){
 
 
 
+struct ServerInfo {
+  int port = 6379; //default port
+  bool is_master = 1;
+};
+
+ServerInfo Arg_Parser (int argc, char **argv) {
+  ServerInfo ret;
+  for ( int i = 0 ; i < argc ; i ++ ) {
+    std::string arg = std::string (argv[i]);
+    if (arg == "--port") {
+      ret.port = std::stoi (argv[i+1]);
+    }
+  }
+  return ret;
+}
+
+
+
 class DataBase {
 public:
   DataBase () {
@@ -86,8 +104,9 @@ private:
 class Command_Handler {
 
 public:
-  Command_Handler (std::shared_ptr <DataBase> DataBase_): 
-  DataBase_ (DataBase_)
+  Command_Handler (std::shared_ptr <DataBase> DataBase_, std::shared_ptr <ServerInfo> ServerInfo_): 
+  DataBase_ (std::move (DataBase_)),
+  ServerInfo_ (std::move(ServerInfo_))
   {}
   std::string handle_command (const std::string& Origin_command){
     ss.str(""), ss.clear();
@@ -137,6 +156,9 @@ public:
     else if (ty == "set") {
       set_();
     }
+    else if (ty == "info") {
+      info_ ();
+    }
   }
 private:
 
@@ -165,18 +187,27 @@ private:
     DataBase_->add (command_[1], command_[2], (command_.size () > 3 ? std::stoi (command_[4]) : -1 ));
   }
 
+  void info_ () {
+    std::string reply = "";
+    if (ServerInfo_ -> is_master) {
+      reply += "role:master\n"; 
+    }
+    ss << "$" << reply.size () << "\r\n" << reply << "\r\n";
+  }
+
   std::stringstream ss;
   std::string Origin_command_;
   std::vector<std::string> command_;
   std::shared_ptr <DataBase> DataBase_;
+  std::shared_ptr <ServerInfo> ServerInfo_;
 };
 
 
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
-  Connection (asio::io_context& io_context, std::shared_ptr <DataBase> DataBase_) :
+  Connection (asio::io_context& io_context, std::shared_ptr <DataBase> DataBase_, std::shared_ptr <ServerInfo> ServerInfo_) :
   socket_ (io_context),
-  command_handler_ (DataBase_)
+  command_handler_ (DataBase_, ServerInfo_)
   {}
 
   //getters
@@ -226,20 +257,6 @@ private:
 
 
 
-struct ServerInfo {
-  int port = 6379; //default port
-};
-
-ServerInfo Arg_Parser (int argc, char **argv) {
-  ServerInfo ret;
-  for ( int i = 0 ; i < argc ; i ++ ) {
-    std::string arg = std::string (argv[i]);
-    if (arg == "--port") {
-      ret.port = std::stoi (argv[i+1]);
-    }
-  }
-  return ret;
-}
 class Server {
 public:
 
@@ -248,7 +265,7 @@ public:
   io_context (io_context),
   acceptor_ (io_context, tcp::endpoint(tcp::v4(), ServerInfo_.port)),
   DataBase_ (std::make_shared <DataBase> ()),
-  ServerInfo_ (ServerInfo_)
+  ServerInfo_ (std::make_shared<ServerInfo>(ServerInfo_))
   {
     accept_connection ();  
   }
@@ -258,7 +275,7 @@ private:
 
   //init a newConnection and bind a client to it
   void accept_connection (){
-    auto newConnection = std::make_shared <Connection> (io_context, DataBase_);
+    auto newConnection = std::make_shared <Connection> (io_context, DataBase_, ServerInfo_);
     acceptor_.async_accept (
       newConnection->get_socket(),
       [this, newConnection] (const asio::error_code& ec) {
@@ -274,7 +291,7 @@ private:
   asio::io_context& io_context;
   tcp::acceptor acceptor_;
   std::shared_ptr <DataBase> DataBase_ ;
-  ServerInfo ServerInfo_;
+  std::shared_ptr <ServerInfo> ServerInfo_;
 };
 
 
