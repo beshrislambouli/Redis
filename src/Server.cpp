@@ -312,24 +312,42 @@ private:
 
     std::string message;
     asio::streambuf reply;
+    std::string response;
 
     
     message = "*1\r\n$4\r\nPING\r\n";
     asio::write(socket, asio::buffer(message), ec);
     asio::read_until(socket, reply, "\r\n");
+    
+    response ={asio::buffers_begin(reply.data()), asio::buffers_begin(reply.data()) + bytes - 2};
+    reply.consume(bytes);
+    std::cout << "Received: " << response << std::endl;
+
 
     message = "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n"; // TODO: change to real port
     asio::write(socket, asio::buffer(message), ec);
     asio::read_until(socket, reply, "\r\n");
 
+    response ={asio::buffers_begin(reply.data()), asio::buffers_begin(reply.data()) + bytes - 2};
+    reply.consume(bytes);
+    std::cout << "Received: " << response << std::endl;
+
     message = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n";
     asio::write(socket, asio::buffer(message), ec);
     asio::read_until(socket, reply, "\r\n");
+
+    response ={asio::buffers_begin(reply.data()), asio::buffers_begin(reply.data()) + bytes - 2};
+    reply.consume(bytes);
+    std::cout << "Received: " << response << std::endl;
 
 
     std::string message2 = "*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n";
     asio::write(socket, asio::buffer(message2), ec);
     asio::read_until(socket, reply, "\r\n");
+
+    response ={asio::buffers_begin(reply.data()), asio::buffers_begin(reply.data()) + bytes - 2};
+    reply.consume(bytes);
+    std::cout << "Received: " << response << std::endl;
 
     
   }
