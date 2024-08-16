@@ -326,6 +326,11 @@ private:
     asio::write(socket, asio::buffer(message), ec);
     asio::read_until(socket, reply, "\r\n");
 
+    message = "*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n";
+    asio::write(socket, asio::buffer(message), ec);
+    asio::read_until(socket, reply, "\r\n");
+
+    
   }
 
   asio::io_context& io_context;
