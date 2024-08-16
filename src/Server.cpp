@@ -200,10 +200,10 @@ private:
   void info_ () {
     std::string reply = "";
     if (ServerInfo_ -> is_master) {
-      reply += "role:master\n"; 
+      reply = "role:master\nmaster_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\nmaster_repl_offset:0\n";
     }
     else {
-      reply += "role:slave\n";
+      reply = "role:slave\n";
     }
     ss << "$" << reply.size () << "\r\n" << reply << "\r\n";
   }
