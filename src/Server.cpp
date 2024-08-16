@@ -237,8 +237,6 @@ public:
       [this, self] (const asio::error_code& ec, std::size_t len) {
         if (!ec) {
           buffer_ [len] = '\0';
-          std::cout << buffer_ << std::endl;
-
           std::string reply = command_handler_.handle_command (buffer_);
           write_data (reply); // reply to client
         }
@@ -247,9 +245,8 @@ public:
     );
   }
 
-  void write_data (const std::string& message){
+  void write_data (const std::string& message) {
     auto self (shared_from_this());
-
     asio::async_write ( // reply to client
       socket_ , asio::buffer (message),
       [this,self] (const asio::error_code& ec, std::size_t len) {
@@ -274,12 +271,15 @@ class Server {
 public:
 
 
-  Server (asio::io_context& io_context, const ServerInfo& ServerInfo_) :
+  Server (asio::io_context& io_context, const ServerInfo& ServerInfo__) :
   io_context (io_context),
-  acceptor_ (io_context, tcp::endpoint(tcp::v4(), ServerInfo_.port)),
+  acceptor_ (io_context, tcp::endpoint(tcp::v4(), ServerInfo__.port)),
   DataBase_ (std::make_shared <DataBase> ()),
-  ServerInfo_ (std::make_shared<ServerInfo>(ServerInfo_))
+  ServerInfo_ (std::make_shared<ServerInfo>(ServerInfo__))
   {
+    if (! ServerInfo_ -> is_master) {
+      Connect_to_Master ();
+    }
     accept_connection ();  
   }
 
@@ -288,6 +288,7 @@ private:
 
   //init a newConnection and bind a client to it
   void accept_connection (){
+    std::cout <<"accepting" << std::endl;
     auto newConnection = std::make_shared <Connection> (io_context, DataBase_, ServerInfo_);
     acceptor_.async_accept (
       newConnection->get_socket(),
@@ -301,10 +302,23 @@ private:
     );
   }
 
+  void Connect_to_Master () {
+    MasterConnection_ = std::make_shared<Connection>(io_context, DataBase_, ServerInfo_);
+    auto &socket = MasterConnection_->get_socket();
+    tcp::resolver resolver(io_context);
+    auto endpoint = resolver.resolve(ServerInfo_->MASTER_HOST, std::to_string(ServerInfo_->MASTER_PORT));
+    asio::error_code ec;
+    asio::connect(socket, endpoint, ec);
+
+    std::string message = "*1\r\n$4\r\nPING\r\n";
+    asio::write(socket, asio::buffer(message), ec);
+  }
+
   asio::io_context& io_context;
   tcp::acceptor acceptor_;
   std::shared_ptr <DataBase> DataBase_ ;
   std::shared_ptr <ServerInfo> ServerInfo_;
+  std::shared_ptr <Connection> MasterConnection_;
 };
 
 
