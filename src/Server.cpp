@@ -169,6 +169,9 @@ public:
     else if (ty == "info") {
       info_ ();
     }
+    else if (ty == "replconf") {
+      replconf_ ();
+    }
   }
 private:
 
@@ -208,6 +211,10 @@ private:
     ss << "$" << reply.size () << "\r\n" << reply << "\r\n";
   }
 
+  void replconf_ () {
+    ss << "+OK\r\n";
+  }
+
   std::stringstream ss;
   std::string Origin_command_;
   std::vector<std::string> command_;
@@ -237,6 +244,7 @@ public:
       [this, self] (const asio::error_code& ec, std::size_t len) {
         if (!ec) {
           buffer_ [len] = '\0';
+          std:: cout << buffer_ << std::endl;
           std::string reply = command_handler_.handle_command (buffer_);
           write_data (reply); // reply to client
         }
@@ -326,6 +334,8 @@ private:
       int num_bytes = asio::read_until(socket, reply, "\r\n");
       reply.consume(num_bytes);
     }
+
+    MasterConnection_ -> init ();
   }
 
   asio::io_context& io_context;
@@ -333,6 +343,7 @@ private:
   std::shared_ptr <DataBase> DataBase_ ;
   std::shared_ptr <ServerInfo> ServerInfo_;
   std::shared_ptr <Connection> MasterConnection_;
+  
 };
 
 
