@@ -62,6 +62,8 @@ long long getime (int inf = 0){
 struct ServerInfo {
   int port = 6379; //default port
   bool is_master = 1;
+  std::string MASTER_HOST;
+  long long MASTER_PORT;
 };
 
 ServerInfo Arg_Parser (int argc, char **argv) {
@@ -70,6 +72,14 @@ ServerInfo Arg_Parser (int argc, char **argv) {
     std::string arg = std::string (argv[i]);
     if (arg == "--port") {
       ret.port = std::stoi (argv[i+1]);
+    }
+    if (arg == "--replicaof") {
+      std::istringstream iss (argv [i+1]);
+      std::string host; iss >> host;
+      long long port; iss >> port;
+      ret .MASTER_HOST = host;
+      ret .MASTER_PORT = port;
+      ret .is_master = false;
     }
   }
   return ret;
@@ -191,6 +201,9 @@ private:
     std::string reply = "";
     if (ServerInfo_ -> is_master) {
       reply += "role:master\n"; 
+    }
+    else {
+      reply += "role:slave\n";
     }
     ss << "$" << reply.size () << "\r\n" << reply << "\r\n";
   }
