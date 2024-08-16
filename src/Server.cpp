@@ -29,6 +29,9 @@
 #include <asio/streambuf.hpp>
 #include <asio/read_until.hpp>
 #include <asio/use_future.hpp>
+#include <unordered_map>
+#include <string>
+
 using asio::ip::tcp;
 
 
@@ -38,10 +41,79 @@ void Err (const asio::error_code& ec){
   std::cout << "Error: " << ec.message () << std::endl;
 }
 
+
+
+
+class Command_Handler {
+
+public:
+  
+  std::string handle_command (const std::string& Origin_command){
+    ss.str(""), ss.clear();
+    Origin_command_ = Origin_command;
+    command_ = Command_Parser ();
+
+    do_command();
+    return ss.str();
+  }
+
+  std::vector<std::string> Command_Parser () {
+  char type = Origin_command_ [0];
+  if ( type == '*') {
+    std::vector <std::string> list;
+    int it = 4;
+    while (it < Origin_command_ .size () ) {
+        it ++;
+        std::string llen = "";
+        while (Origin_command_ [it] !='\r') {
+          llen += Origin_command_ [it];
+          it ++;
+        } it += 2;
+        int len = stoi (llen);
+        std::string crnt = "";
+        for (int i = 0 ; i < len ; i ++ ) {
+          crnt += tolower (Origin_command_ [it]);
+          it ++;
+        } it +=2 ;
+        list .push_back (crnt);
+    }
+    return list;
+  }
+}
+
+
+
+  void do_command () {
+
+    if ( command_ [0] == "ping" ) {
+      ping_ ();
+    }
+    else if (command_ [0] == "echo"){
+      echo_ ();
+    }
+  }
+private:
+
+
+  void ping_ () {
+    ss << "+PONG\r\n";
+  }
+  void echo_ () {
+    ss << "+" + command_ [1] + "\r\n";
+  }
+
+
+  std::stringstream ss;
+  std::string Origin_command_;
+  std::vector<std::string> command_;
+};
+
+
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
   Connection (asio::io_context& io_context) :
-  socket_ (io_context)
+  socket_ (io_context),
+  command_handler_ ()
   {}
 
   //getters
@@ -60,8 +132,8 @@ public:
           buffer_ [len] = '\0';
           std::cout << buffer_ << std::endl;
           
-          std::string message = "+PONG\r\n";
-          write_data (message); // reply to client
+          std::string reply = command_handler_.handle_command (buffer_);
+          write_data (reply); // reply to client
         }
         else Err (ec);
       }
@@ -82,9 +154,11 @@ public:
     );
   }
 
+
 private:
   tcp::socket socket_; // the connection client
   char buffer_ [kBufferSize]; // buffer for input
+  Command_Handler command_handler_;
 };
 
 class Server {
