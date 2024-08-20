@@ -7,35 +7,93 @@ CommandHandler::CommandHandler(Server* Server_, Connection* Connection_)
 
 void CommandHandler::handle_command(const std::string& OriginCommand) {
     OriginCommand_ = std::move(OriginCommand);
-    Command_ = CommandParser();
-    do_command();
-    Reply();
+    Commands_ = CommandParser();
+    std::cout <<"-----------------------" << std::endl;
+    for (auto command: Commands_) {
+        for (auto u :command) {
+            std::cout << u << " " ;
+        }
+        std::cout << std::endl;
+    }
+    std::cout <<"-----------------------" << std::endl;
+
+    for (auto& u: Commands_) {
+        Command_ = u;
+        do_command();
+        Reply();
+    }
 }
 
-std::vector<std::string> CommandHandler::CommandParser() {
-    char type = OriginCommand_[0];
-    std::vector<std::string> list;
-    if (type == '*') {
-        int it = 4;
-        while (it < OriginCommand_.size()) {
-            it++;
-            std::string llen = "";
-            while (OriginCommand_[it] != '\r') {
-                llen += OriginCommand_[it];
-                it++;
+
+std::vector<std::vector<std::string>> CommandHandler::CommandParser() {
+    std::vector<std::vector<std::string>> commands;
+    size_t pos = 0;
+
+    auto read_line = [&]() -> std::string {
+        size_t end_pos = OriginCommand_.find('\n', pos);
+        if (end_pos == std::string::npos) end_pos = OriginCommand_.size();
+        std::string line = OriginCommand_.substr(pos, end_pos - pos);
+        pos = end_pos + 1;
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back(); // Remove the trailing \r
+        }
+        return line;
+    };
+
+    while (pos < OriginCommand_.size()) {
+        std::string line = read_line();
+        if (line.empty()) continue; // Skip empty lines
+
+        if (line[0] == '*') {
+            int repeated = std::stoi(line.substr(1));
+            std::vector<std::string> command;
+            for (int i = 0; i < repeated; ++i) {
+                line = read_line();
+                if (line.empty()) {
+                    std::cerr << "Failed to parse command = " << OriginCommand_ << "\n";
+                    return {};
+                }
+                if (line[0] == '$') {
+                    int str_len = std::stoi(line.substr(1));
+                    if (str_len < 0) {
+                        std::cerr << "Invalid string length = " << OriginCommand_ << "\n";
+                        return {};
+                    }
+                    std::string bulk_str = OriginCommand_.substr(pos, str_len);
+                    pos += str_len;
+                    command.push_back(std::move(bulk_str));
+                    pos += 2; // Skip CRLF
+                } else {
+                    std::cerr << "Unexpected line format = " << OriginCommand_ << "\n";
+                    return {};
+                }
             }
-            it += 2;
-            int len = std::stoi(llen);
-            std::string crnt = "";
-            for (int i = 0; i < len; i++) {
-                crnt += std::tolower(OriginCommand_[it]);
-                it++;
+            commands.push_back(std::move(command));
+        } else if (line[0] == '$') {
+            int str_len = std::stoi(line.substr(1));
+            if (str_len < 0) {
+                std::cerr << "Invalid string length = " << OriginCommand_ << "\n";
+                return {};
             }
-            it += 2;
-            list.push_back(crnt);
+            std::string bulk_str = OriginCommand_.substr(pos, str_len);
+            pos += str_len;
+            pos += 2; // Skip CRLF
+            commands.emplace_back(1, std::move(bulk_str));
+        } else {
+            std::cerr << "Incorrect format, command = " << OriginCommand_ << "\n";
+            return {};
         }
     }
-    return list;
+
+    for (auto& command: commands) {
+        for (auto& u :command) {
+            for (auto& v: u) {
+                v = std::tolower (v);
+            }
+        }
+    }
+
+    return commands;
 }
 
 void CommandHandler::do_command() {
@@ -76,6 +134,7 @@ void CommandHandler::get_() {
 }
 
 void CommandHandler::set_() {
+    std::cout <<"here" << std::endl;
     ss << "+OK\r\n";
     Server_->DataBase_->add(Command_[1], Command_[2], (Command_.size() > 3 ? std::stoi(Command_[4]) : -1));
     propagate_();

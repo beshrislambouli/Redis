@@ -29,6 +29,7 @@ void Connection::read_data() {
 }
 
 void Connection::write_data(const std::string& message) {
+    std::cout << message << std::endl;
     if (toMaster) return; // Do not write if it's a master connection
     auto self(shared_from_this());
     asio::async_write(
