@@ -7,6 +7,7 @@ CommandHandler::CommandHandler(Server* Server_, Connection* Connection_)
 
 void CommandHandler::handle_command(const std::string& OriginCommand) {
     OriginCommand_ = std::move(OriginCommand);
+    offset += OriginCommand_.size ();
     Commands_ = CommandParser();
     std::cout <<"-----------------------" << std::endl;
     for (auto command: Commands_) {
@@ -163,7 +164,9 @@ void CommandHandler::psync_() {
 }
 
 void CommandHandler::getack_ () {
-    ss << "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n";
+    // -37 because of REPLCONF GETACK *
+    ss << "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n"; 
+    ss << "$" << std::to_string (offset-37).size() << "\r\n" << offset-37 << "\r\n";
     exception = true;
 }
 
@@ -174,7 +177,8 @@ void CommandHandler::propagate_() {
 }
 
 void CommandHandler::Reply() {
-    Connection_->write_data(ss.str(), exception);
+    Connection_ -> write_data(ss.str(), exception);
     ss.str(""); ss.clear();
     exception = false;
+    
 }

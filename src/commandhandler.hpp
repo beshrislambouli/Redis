@@ -38,7 +38,8 @@ private:
     std::vector<std::string> Command_;
     Server* Server_;
     Connection* Connection_;
-    bool exception = false ;
+    bool exception = false;
+    int offset = 0;
 };
 
 #endif // COMMANDHANDLER_HPP
