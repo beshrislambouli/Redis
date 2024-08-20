@@ -29,6 +29,8 @@ private:
     void replconf_();
     void psync_();
     void getack_ ();
+    void type_ ();
+
     void propagate_();
     void Reply();
 

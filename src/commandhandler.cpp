@@ -114,6 +114,8 @@ void CommandHandler::do_command() {
         else replconf_();
     } else if (ty == "psync") {
         psync_();
+    } else if (ty == "type") {
+        type_();
     }
 }
 
@@ -168,6 +170,15 @@ void CommandHandler::getack_ () {
     ss << "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n"; 
     ss << "$" << std::to_string (offset-37).size() << "\r\n" << offset-37 << "\r\n";
     exception = true;
+}
+
+void CommandHandler::type_ () {
+    std::optional<std::string> value = Server_->DataBase_->get(Command_[1]);
+    if (value.has_value()) {
+        ss << "+string\r\n";
+    } else {
+        ss << "+none\r\n";
+    }
 }
 
 void CommandHandler::propagate_() {
