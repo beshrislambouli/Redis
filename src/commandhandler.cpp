@@ -116,6 +116,8 @@ void CommandHandler::do_command() {
         psync_();
     } else if (ty == "type") {
         type_();
+    } else if (ty == "xadd") {
+        xadd_();
     }
 }
 
@@ -128,7 +130,7 @@ void CommandHandler::echo_() {
 }
 
 void CommandHandler::get_() {
-    std::optional<std::string> value = Server_->DataBase_->get(Command_[1]);
+    std::optional<std::string> value = Server_->DataBase_->get_key(Command_[1]);
     if (value.has_value()) {
         std::string ans = value.value();
         ss << "$" << ans.size() << "\r\n" << ans << "\r\n";
@@ -138,9 +140,8 @@ void CommandHandler::get_() {
 }
 
 void CommandHandler::set_() {
-    std::cout <<"here" << std::endl;
     ss << "+OK\r\n";
-    Server_->DataBase_->add(Command_[1], Command_[2], (Command_.size() > 3 ? std::stoi(Command_[4]) : -1));
+    Server_->DataBase_->add_key(Command_[1], Command_[2], (Command_.size() > 3 ? std::stoi(Command_[4]) : -1));
     propagate_();
 }
 
@@ -173,12 +174,21 @@ void CommandHandler::getack_ () {
 }
 
 void CommandHandler::type_ () {
-    std::optional<std::string> value = Server_->DataBase_->get(Command_[1]);
-    if (value.has_value()) {
+    std::optional<std::string> value1 = Server_->DataBase_->get_key(Command_[1]);
+    std::optional<std::set<Value>> value2 = Server_->DataBase_->get_stream_set(Command_[1]);
+    if (value1.has_value()) {
         ss << "+string\r\n";
+    } else if (value2.has_value()) {
+        ss << "+stream\r\n";
     } else {
         ss << "+none\r\n";
     }
+}
+
+void CommandHandler::xadd_ () {
+    ss << "$" << Command_[2].size () << "\r\n" << Command_[2] << "\r\n";
+    Value value = Server_->DataBase_->CommandToValue (Command_);
+    Server_->DataBase_->add_stream (Command_[1], value);
 }
 
 void CommandHandler::propagate_() {
@@ -191,5 +201,4 @@ void CommandHandler::Reply() {
     Connection_ -> write_data(ss.str(), exception);
     ss.str(""); ss.clear();
     exception = false;
-    
 }

@@ -33,6 +33,8 @@
 
 class Connection;  // Forward declaration
 class CommandHandler;  // Forward declaration
+class DataBase;
+
 
 class Server : public std::enable_shared_from_this<Server> {
 public:

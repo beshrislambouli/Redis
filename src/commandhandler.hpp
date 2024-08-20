@@ -30,7 +30,7 @@ private:
     void psync_();
     void getack_ ();
     void type_ ();
-
+    void xadd_ ();
     void propagate_();
     void Reply();
 
