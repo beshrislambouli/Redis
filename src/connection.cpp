@@ -9,6 +9,7 @@ tcp::socket& Connection::get_socket() {
 }
 
 void Connection::init() {
+    std::cout << "init connection" << std::endl;
     read_data();
 }
 
@@ -19,6 +20,7 @@ void Connection::read_data() {
         [this, self](const asio::error_code& ec, std::size_t len) {
             if (!ec) {
                 buffer_[len] = '\0'; // Null-terminate the received data
+                std::cout << "Command: " << buffer_ << std::endl;
                 CommandHandler_->handle_command(buffer_);
             } else {
                 Err(ec);
@@ -28,9 +30,9 @@ void Connection::read_data() {
     );
 }
 
-void Connection::write_data(const std::string& message) {
+void Connection::write_data(const std::string& message, bool exception) {
     std::cout << message << std::endl;
-    if (toMaster) return; // Do not write if it's a master connection
+    if (toMaster && !exception) return; // Do not write if it's a master connection unless it/s an exception (GETACK)
     auto self(shared_from_this());
     asio::async_write(
         Socket_, asio::buffer(message),

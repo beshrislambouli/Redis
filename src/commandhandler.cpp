@@ -109,7 +109,8 @@ void CommandHandler::do_command() {
     } else if (ty == "info") {
         info_();
     } else if (ty == "replconf") {
-        replconf_();
+        if (Command_[1] == "getack") getack_ ();
+        else replconf_();
     } else if (ty == "psync") {
         psync_();
     }
@@ -161,6 +162,11 @@ void CommandHandler::psync_() {
     Server_->Replicas_.push_back(Connection_);
 }
 
+void CommandHandler::getack_ () {
+    ss << "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n";
+    exception = true;
+}
+
 void CommandHandler::propagate_() {
     for (auto& replica : Server_->Replicas_) {
         replica->write_data(OriginCommand_);
@@ -168,6 +174,7 @@ void CommandHandler::propagate_() {
 }
 
 void CommandHandler::Reply() {
-    Connection_->write_data(ss.str());
+    Connection_->write_data(ss.str(), exception);
     ss.str(""); ss.clear();
+    exception = false;
 }

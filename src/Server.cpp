@@ -49,12 +49,24 @@ void Server::Connect_to_Master() {
 
     for (const std::string& message : messages) {
         asio::write(socket, asio::buffer(message), ec);
-        int num_bytes = asio::read_until(socket, reply, "\r\n");
-        reply.consume(num_bytes);
+        int bytes = asio::read_until(socket, reply, "\r\n"); //the reply won't have \r\n in the middle
+        reply.consume(bytes);
     }
+    
+    int bytes = asio::read_until (socket, reply, "\r\n"); // len \r\n then the rdb and getack
+    int LenRDB = std::stoi ( std::string (
+                                asio::buffers_begin(reply.data()) + 1, //not the $
+                                asio::buffers_begin(reply.data()) + bytes - 2) // not the \r\n
+                          ) ;
 
-    int num_bytes = asio::read_until(socket, reply, "\r\n");
-    reply.consume(num_bytes);
+    reply.consume(bytes); //consume the len
+    reply.consume(LenRDB); //consume the rdb
 
+    std::string getack {   
+                            asio::buffers_begin(reply.data()),
+                            asio::buffers_end(reply.data())
+                        };
     MasterConnection_->init();
+    MasterConnection_-> CommandHandler_ -> handle_command (getack);
 }
+

@@ -16,9 +16,10 @@ public:
     tcp::socket& get_socket();
     void init();
     void read_data();
-    void write_data(const std::string& message);
+    void write_data(const std::string& message, bool exception = 0);
 
 private:
+    friend class Server;
     tcp::socket Socket_;
     bool toMaster;
     char buffer_[1024];

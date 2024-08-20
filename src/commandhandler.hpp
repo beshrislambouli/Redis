@@ -28,6 +28,7 @@ private:
     void info_();
     void replconf_();
     void psync_();
+    void getack_ ();
     void propagate_();
     void Reply();
 
@@ -37,6 +38,7 @@ private:
     std::vector<std::string> Command_;
     Server* Server_;
     Connection* Connection_;
+    bool exception = false ;
 };
 
 #endif // COMMANDHANDLER_HPP
