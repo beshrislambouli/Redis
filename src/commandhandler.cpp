@@ -152,7 +152,7 @@ void CommandHandler::set_() {
 }
 
 void CommandHandler::incr_ () {
-    std::string& key = Command_ [1];
+    const std::string& key = Command_ [1];
     std::optional<std::string> value = Server_->DataBase_->get_key(Command_[1]);
     if (value.has_value ()) {
         if (! isNumber (value.value())) {

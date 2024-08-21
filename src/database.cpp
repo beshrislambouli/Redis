@@ -3,11 +3,15 @@
 
 
 void DataBase::add_key(const std::string& key, const std::string& value, long long exp) {
+    std::lock_guard<std::mutex> lock(KVMtx);
     exp = (exp == -1 ? getime(-1) : getime() + exp);
-    DatabaseKV.insert({ key, { value, exp } });
+    std::cout << "to insert " << key << " " << value << std::endl;
+    DatabaseKV [key] = {value, exp};
+    std::cout << "done " << DatabaseKV [key] .first << std::endl;
 }
 
 std::optional<std::string> DataBase::get_key(const std::string& key) {
+    std::lock_guard<std::mutex> lock(KVMtx);
     auto ans = DatabaseKV.find(key);
     if (ans == DatabaseKV.end()) return std::nullopt;
     if (ans->second.second < getime()) {
@@ -48,7 +52,7 @@ void DataBase::add_stream (const std::string& key, const Value& value) {
     if (ans == DatabaseStream.end ()) {
         std::set <Value> tmp;
         tmp .insert (value);
-        DatabaseStream.insert ({ key, tmp });
+        DatabaseStream.insert[key] = tmp;
     }
     else {
         ans -> second .insert (value);

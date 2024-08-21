@@ -6,6 +6,7 @@
 #include <optional>
 #include <chrono>
 #include <set>
+#include <mutex>
 #include "utils.hpp"
 #include "commandhandler.hpp"
 
@@ -41,12 +42,15 @@ private:
 
     friend class CommandHandler;
     
+    
 
     ID StringToID (const std::string&key, const std::string& id);
     Value CommandToValue (const std::vector<std::string>& Command);
     Value CommandToRange (const std::string& r);
     int validId (const std::string&key, const Value& value);
 
+    std::mutex KVMtx;
+    std::mutex StreamMtx;
     std::unordered_map<std::string, std::pair<std::string, long long>> DatabaseKV;
     std::unordered_map<std::string, std::set<Value>> DatabaseStream;
 };
