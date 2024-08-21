@@ -27,8 +27,9 @@ private:
     void set_();
     void incr_();
     void info_();
-    void mutli_();
+    void multi_();
     void exec_() ;
+    void queued_();
     void replconf_();
     void psync_();
     void getack_ ();

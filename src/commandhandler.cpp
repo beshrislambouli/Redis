@@ -99,7 +99,9 @@ std::vector<std::vector<std::string>> CommandHandler::CommandParser() {
 
 void CommandHandler::do_command() {
     std::string ty = Command_[0];
-    if (ty == "ping") {
+    if (multi && ty != "exec") {
+        queued_ ();
+    } else if (ty == "ping") {
         ping_();
     } else if (ty == "echo") {
         echo_();
@@ -125,7 +127,7 @@ void CommandHandler::do_command() {
     } else if (ty == "incr") {
         incr_ ();
     } else if (ty == "multi") {
-        mutli_();
+        multi_();
     } else if (ty == "exec") {
         exec_ ();
     }
@@ -174,7 +176,7 @@ void CommandHandler::incr_ () {
     propagate_();
 }
 
-void CommandHandler::mutli_ () {
+void CommandHandler::multi_ () {
     multi = 1 ;
     ss << "+OK\r\n";
 }
@@ -185,6 +187,10 @@ void CommandHandler::exec_ () {
         ss << "*0\r\n";
     }
     else ss << "-ERR EXEC without MULTI\r\n";
+}
+
+void CommandHandler::queued_ () {
+    ss << "+QUEUED\r\n";
 }
 
 void CommandHandler::info_() {
