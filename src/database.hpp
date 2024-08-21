@@ -42,7 +42,7 @@ private:
     friend class CommandHandler;
     
 
-    ID StringToID (const std::string& id);
+    ID StringToID (const std::string&key, const std::string& id);
     Value CommandToValue (const std::vector<std::string>& Command);
     int validId (const std::string&key, const Value& value);
 

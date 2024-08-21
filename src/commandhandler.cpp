@@ -195,7 +195,8 @@ void CommandHandler::xadd_ () {
         ss << "-ERR The ID specified in XADD must be greater than 0-0\r\n";
         return ;
     }
-    ss << "$" << Command_[2].size () << "\r\n" << Command_[2] << "\r\n";
+    std::string id = std::to_string (value.id.timestamp) + "-" + std::to_string (value.id.seq);
+    ss << "$" << id.size () << "\r\n" << id << "\r\n";
     Server_->DataBase_->add_stream (Command_[1], value);
 }
 
