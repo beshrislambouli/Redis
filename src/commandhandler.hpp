@@ -48,6 +48,7 @@ private:
     Connection* Connection_;
     bool exception = false;
     int offset = 0;
+    bool multi = 0;
 
 };
 

@@ -175,11 +175,16 @@ void CommandHandler::incr_ () {
 }
 
 void CommandHandler::mutli_ () {
+    multi = 1 ;
     ss << "+OK\r\n";
 }
 
 void CommandHandler::exec_ () {
-    ss << "-ERR EXEC without MULTI\r\n";
+    if (multi) {
+        multi = 0 ;
+        ss << "*0\r\n";
+    }
+    else ss << "-ERR EXEC without MULTI\r\n";
 }
 
 void CommandHandler::info_() {
