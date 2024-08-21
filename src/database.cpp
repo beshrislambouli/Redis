@@ -91,32 +91,32 @@ ID DataBase::StringToID (const std::string& key, const std::string& id) {
         }
     }
 
-    tmp.timestamp = std::stol (timestamp);
-    std::cout <<"wergerwg1" << std::endl;
-    if (seq == "*") {
-        std::optional<std::set<Value>> ss = get_stream_set (key);
-        std::cout <<"wergerwg2" << std::endl;
-        if (!ss.has_value ()) {
-            std::cout <<"wergerwg3" << std::endl;
-            tmp.seq = (int)(tmp.timestamp == 0);
-        }
-        else {
-            std::cout <<"wergerwg4" << std::endl;
-            std::set<Value> s = ss.value();
-            auto it = s.end (); it --;
-            if (it->id.timestamp == tmp.timestamp) {
-                tmp.seq = it->id.seq + 1;
-            }
-            else {
-                tmp.seq = 0;
-            }
-        }
+    if (timestamp == "*") {
+        tmp.timestamp = getime ();
+        tmp.seq = 0;
     }
     else {
-        std::cout <<"wergerwg5" << std::endl;
-        tmp.seq = std::stoi (seq);
+        tmp.timestamp = std::stol (timestamp);
+        if (seq == "*") {
+            std::optional<std::set<Value>> ss = get_stream_set (key);
+            if (!ss.has_value ()) {
+                tmp.seq = (int)(tmp.timestamp == 0);
+            }
+            else {
+                std::set<Value> s = ss.value();
+                auto it = s.end (); it --;
+                if (it->id.timestamp == tmp.timestamp) {
+                    tmp.seq = it->id.seq + 1;
+                }
+                else {
+                    tmp.seq = 0;
+                }
+            }
+        }
+        else {
+            tmp.seq = std::stoi (seq);
+        }
     }
-
     return tmp;
 }
 
