@@ -13,6 +13,9 @@
 struct ID {
     long long timestamp = 0;
     int seq = 0;
+    bool operator< (const ID& other) const;
+    bool operator==(const ID& other) const;
+    bool operator<=(const ID& other) const;
 };
 
 struct Value {
@@ -38,8 +41,10 @@ private:
 
     friend class CommandHandler;
     
+
     ID StringToID (const std::string& id);
     Value CommandToValue (const std::vector<std::string>& Command);
+    int validId (const std::string&key, const Value& value);
 
     std::unordered_map<std::string, std::pair<std::string, long long>> DatabaseKV;
     std::unordered_map<std::string, std::set<Value>> DatabaseStream;

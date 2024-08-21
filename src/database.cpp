@@ -17,18 +17,30 @@ std::optional<std::string> DataBase::get_key(const std::string& key) {
     return ans->second.first;
 }
 
-bool Value::operator< (const Value& other) const {
-    if (id.timestamp < other.id.timestamp) return true;
-    if (id.timestamp == other.id.timestamp && id.seq < other.id.seq ) return true;
+bool ID::operator< (const ID& other) const {
+    if (timestamp < other.timestamp) return true;
+    if (timestamp == other.timestamp && seq < other.seq ) return true;
     return false;
 }
 
+bool ID::operator==(const ID& other) const {
+    return (timestamp == other.timestamp && seq == other.seq );
+}
+
+bool ID::operator<=(const ID& other) const {
+    return (*this == other || *this < other );
+}
+
+bool Value::operator< (const Value& other) const {
+    return this->id < other.id;
+}
+
 bool Value::operator==(const Value& other) const {
-    return (id.timestamp == other.id.timestamp && id.seq == other.id.seq );
+    return this->id == other.id;
 }
 
 bool Value::operator<=(const Value& other) const {
-    return (*this == other || *this < other );
+    return this->id <= other.id;
 }
 
 void DataBase::add_stream (const std::string& key, const Value& value) {
@@ -84,3 +96,11 @@ ID DataBase::StringToID (const std::string& id) {
     return tmp;
 }
 
+int DataBase::validId (const std::string&key, const Value& value) {
+    if ( !value.id.timestamp && !value.id.seq ) return -1;
+    std::optional<std::set<Value>> ss = get_stream_set (key);
+    if (!ss.has_value()) return true;
+    std::set<Value> s = ss.value();
+    auto it = s.end (); it --;
+    return (it->id < value.id);
+}

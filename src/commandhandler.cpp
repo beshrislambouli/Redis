@@ -186,8 +186,16 @@ void CommandHandler::type_ () {
 }
 
 void CommandHandler::xadd_ () {
-    ss << "$" << Command_[2].size () << "\r\n" << Command_[2] << "\r\n";
     Value value = Server_->DataBase_->CommandToValue (Command_);
+    int IsValid = Server_->DataBase_->validId (Command_[1], value);
+    if (IsValid == 0) {
+        ss << "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n";
+        return ;
+    } else if (IsValid == -1) {
+        ss << "-ERR The ID specified in XADD must be greater than 0-0\r\n";
+        return ;
+    }
+    ss << "$" << Command_[2].size () << "\r\n" << Command_[2] << "\r\n";
     Server_->DataBase_->add_stream (Command_[1], value);
 }
 
