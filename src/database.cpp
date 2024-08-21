@@ -65,9 +65,7 @@ Value DataBase::CommandToValue (const std::vector<std::string>& Command) {
     //Command [0] = command type, Command [1] = key, Command [2] = ID, Command [...] = data
     Value tmp;
     std::string key = Command [1];
-
     tmp .id = StringToID (key, Command[2]);
-
     std::vector <std::string> data; for (int i = 3 ; i < Command.size () ; i ++ ) data. push_back (Command [i]);
     tmp .data = data;
 
@@ -77,19 +75,9 @@ Value DataBase::CommandToValue (const std::vector<std::string>& Command) {
 ID DataBase::StringToID (const std::string& key, const std::string& id) {
     ID tmp;
     std::string timestamp, seq;
-
-    int t = 0 ;
-    for ( int i = 0 ; i < id.size () ; i ++ ) {
-        if (id [i] == '-') {
-            t = 1 ;
-            continue;
-        }
-        if (!t) {
-            timestamp += id [i];
-        } else {
-            seq += id [i];
-        }
-    }
+    auto p = SplitAt (id,'-');
+    timestamp = p.first;
+    seq = p.second;
 
     if (timestamp == "*") {
         tmp.timestamp = getime ();
@@ -127,4 +115,39 @@ int DataBase::validId (const std::string&key, const Value& value) {
     std::set<Value> s = ss.value();
     auto it = s.end (); it --;
     return (it->id < value.id);
+}
+
+Value DataBase::CommandToRange (const std::string& r) {
+    ID tmp;
+    if (r == "-") {
+        tmp.timestamp = 0;
+        tmp.seq = 0; //don't care about {0,0}
+    }
+    else if ( r == "+" ) {
+        tmp.timestamp = getime (-1);
+        tmp.seq = 0; // don't care since max 
+    }
+    else {
+        auto pt = SplitAt (r,'-');
+        std::cout << pt.first << " " << pt.second << std::endl;
+        tmp.timestamp = std::stol (pt.first);
+        tmp.seq = std::stoi (pt.second);
+    }
+    Value tmpp;
+    tmpp .id = tmp;
+    return tmpp;
+}
+
+
+std::vector <Value> DataBase::get_range (const std::string& key, Value& l, Value& r) {
+    std::vector <Value> tmp;
+    std::optional<std::set<Value>> ss = get_stream_set (key);
+    if (ss.has_value()) {
+        std::set<Value> s = ss.value ();
+        for ( auto it = s.lower_bound (l); it != s.end () ; it ++ ) {
+            if ( r < *it ) break;
+            tmp .push_back (*it);
+        }
+    }
+    return tmp;
 }

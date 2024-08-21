@@ -36,7 +36,7 @@ public:
     // DatabaseStream interface
     void add_stream (const std::string& key, const Value& value);
     std::optional<std::set<Value>> get_stream_set (const std::string& key);
-    
+    std::vector <Value> get_range (const std::string& key, Value& l, Value& r);
 private:
 
     friend class CommandHandler;
@@ -44,6 +44,7 @@ private:
 
     ID StringToID (const std::string&key, const std::string& id);
     Value CommandToValue (const std::vector<std::string>& Command);
+    Value CommandToRange (const std::string& r);
     int validId (const std::string&key, const Value& value);
 
     std::unordered_map<std::string, std::pair<std::string, long long>> DatabaseKV;

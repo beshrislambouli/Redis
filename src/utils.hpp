@@ -15,4 +15,6 @@ void Err(const asio::error_code& ec);
 // Utility function to get current time in milliseconds
 long long getime(int inf = 0);
 
+std::pair <std::string, std::string> SplitAt (const std::string& s, char c);
+
 #endif // UTILS_HPP

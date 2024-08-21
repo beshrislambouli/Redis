@@ -118,6 +118,8 @@ void CommandHandler::do_command() {
         type_();
     } else if (ty == "xadd") {
         xadd_();
+    } else if (ty == "xrange") {
+        xrange_ ();
     }
 }
 
@@ -198,6 +200,23 @@ void CommandHandler::xadd_ () {
     std::string id = std::to_string (value.id.timestamp) + "-" + std::to_string (value.id.seq);
     ss << "$" << id.size () << "\r\n" << id << "\r\n";
     Server_->DataBase_->add_stream (Command_[1], value);
+}
+
+void CommandHandler::xrange_ () {
+    std::string& key = Command_ [1];
+    Value l = Server_->DataBase_->CommandToRange (Command_ [2]);
+    Value r = Server_->DataBase_->CommandToRange (Command_ [3]);
+    std::vector <Value> values = Server_->DataBase_->get_range (key,l,r);
+    ss << "*" << values.size () <<  "\r\n";
+    for (auto value: values) {
+        ss << "*2\r\n";
+        std::string id = std::to_string (value.id.timestamp) + "-" + std::to_string (value.id.seq);
+        ss << "$" << id.size () << "\r\n" << id << "\r\n";
+        ss << "*" << value.data.size () << "\r\n";
+        for (auto d: value.data) {
+            ss << "$" << d.size () << "\r\n" << d << "\r\n";
+        }
+    }
 }
 
 void CommandHandler::propagate_() {

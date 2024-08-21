@@ -31,6 +31,8 @@ private:
     void getack_ ();
     void type_ ();
     void xadd_ ();
+    void xrange_ ();
+    
     void propagate_();
     void Reply();
 

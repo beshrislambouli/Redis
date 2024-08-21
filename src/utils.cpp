@@ -35,3 +35,22 @@ long long getime(int inf) {
     auto value = now_in_ms.time_since_epoch();
     return value.count();
 }
+
+std::pair <std::string, std::string> SplitAt (const std::string& s, char c) {
+    std::string s1,s2;
+    s1 = s2 = "";
+    int t = 0 ;
+    for ( int i = 0 ; i < s.size () ; i ++ ) {
+        if (s [i] == c) {
+            t = 1 ;
+            continue;
+        }
+        if (!t) {
+            s1 += s [i];
+        } else {
+            s2 += s [i];
+        }
+    }
+    return {s1,s2};
+}
+
