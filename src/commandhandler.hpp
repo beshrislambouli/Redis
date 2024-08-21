@@ -27,6 +27,7 @@ private:
     void set_();
     void incr_();
     void info_();
+    void mutli_();
     void replconf_();
     void psync_();
     void getack_ ();

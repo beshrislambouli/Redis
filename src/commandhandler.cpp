@@ -124,6 +124,8 @@ void CommandHandler::do_command() {
         xread_ ();
     } else if (ty == "incr") {
         incr_ ();
+    } else if (ty == "multi") {
+        mutli_();
     }
 }
 
@@ -168,6 +170,10 @@ void CommandHandler::incr_ () {
         ss << ":1\r\n";
     }
     propagate_();
+}
+
+void CommandHandler::mutli_ () {
+    ss << "+OK\r\n";
 }
 
 void CommandHandler::info_() {
