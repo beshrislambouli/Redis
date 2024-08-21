@@ -30,6 +30,7 @@ private:
     void multi_();
     void exec_() ;
     void queued_();
+    void discard_();
     void replconf_();
     void psync_();
     void getack_ ();

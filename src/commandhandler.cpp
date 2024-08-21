@@ -129,7 +129,9 @@ void CommandHandler::do_command() {
     } else if (ty == "multi") {
         multi_();
     } else if (ty == "exec") {
-        exec_ ();
+        exec_();
+    } else if (ty == "discard") {
+        discard_();
     }
 }
 
@@ -196,6 +198,15 @@ void CommandHandler::exec_ () {
 void CommandHandler::queued_ () {
     ss << "+QUEUED\r\n";
     QueuedCommands.push_back (OriginCommand_);
+}
+
+void CommandHandler::discard_ () {
+    if (multi) {
+        mutli = 0 ;
+        QueuedCommands.clear ();
+        ss << "+OK\r\n";
+    }
+    else ss << "-ERR DISCARD without MULTI\r\n";
 }
 
 void CommandHandler::info_() {
