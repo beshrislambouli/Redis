@@ -52,7 +52,7 @@ void DataBase::add_stream (const std::string& key, const Value& value) {
     if (ans == DatabaseStream.end ()) {
         std::set <Value> tmp;
         tmp .insert (value);
-        DatabaseStream.insert[key] = tmp;
+        DatabaseStream[key] = tmp;
     }
     else {
         ans -> second .insert (value);
