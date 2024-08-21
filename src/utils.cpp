@@ -54,3 +54,9 @@ std::pair <std::string, std::string> SplitAt (const std::string& s, char c) {
     return {s1,s2};
 }
 
+bool isNumber (const std::string& s) {
+    for (auto u : s) {
+        if ( u > '9' || u < '0') return 0;
+    }
+    return 1;
+}

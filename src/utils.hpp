@@ -17,4 +17,6 @@ long long getime(int inf = 0);
 
 std::pair <std::string, std::string> SplitAt (const std::string& s, char c);
 
+bool isNumber (const std::string& s);
+
 #endif // UTILS_HPP

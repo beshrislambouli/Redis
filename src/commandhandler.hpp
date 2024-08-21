@@ -25,6 +25,7 @@ private:
     void echo_();
     void get_();
     void set_();
+    void incr_();
     void info_();
     void replconf_();
     void psync_();
@@ -45,6 +46,7 @@ private:
     Connection* Connection_;
     bool exception = false;
     int offset = 0;
+
 };
 
 #endif // COMMANDHANDLER_HPP

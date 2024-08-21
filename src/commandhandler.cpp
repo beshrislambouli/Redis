@@ -122,6 +122,8 @@ void CommandHandler::do_command() {
         xrange_ ();
     } else if (ty == "xread") {
         xread_ ();
+    } else if (ty == "incr") {
+        incr_ ();
     }
 }
 
@@ -146,6 +148,25 @@ void CommandHandler::get_() {
 void CommandHandler::set_() {
     ss << "+OK\r\n";
     Server_->DataBase_->add_key(Command_[1], Command_[2], (Command_.size() > 3 ? std::stoi(Command_[4]) : -1));
+    propagate_();
+}
+
+void CommandHandler::incr_ () {
+    std::string& key = Command_ [1];
+    std::optional<std::string> value = Server_->DataBase_->get_key(Command_[1]);
+    if (value.has_value ()) {
+        if (! isNumber (value.value())) {
+            ss << "-ERR value is not an integer or out of range\r\n";
+            return ;
+        }
+        int num = std::stoi (value.value ()) + 1;
+        Server_->DataBase_->add_key(key, std::to_string (num));
+        ss << ":" << num << "\r\n";
+    }
+    else {
+        Server_->DataBase_->add_key(key, "1");
+        ss << ":1\r\n";
+    }
     propagate_();
 }
 

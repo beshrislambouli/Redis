@@ -137,7 +137,6 @@ Value DataBase::CommandToRange (const std::string& r) {
     return tmpp;
 }
 
-
 std::vector <Value> DataBase::get_range (const std::string& key, Value& l, Value& r, int inclusive) {
     std::vector <Value> tmp;
     std::optional<std::set<Value>> ss = get_stream_set (key);
