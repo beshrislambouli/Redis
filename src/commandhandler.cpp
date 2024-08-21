@@ -202,7 +202,7 @@ void CommandHandler::queued_ () {
 
 void CommandHandler::discard_ () {
     if (multi) {
-        mutli = 0 ;
+        multi = 0 ;
         QueuedCommands.clear ();
         ss << "+OK\r\n";
     }
