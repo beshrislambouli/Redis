@@ -50,6 +50,7 @@ private:
     bool exception = false;
     int offset = 0;
     bool multi = 0;
+    std::vector <std::string> QueuedCommands;
 
 };
 

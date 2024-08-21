@@ -184,13 +184,18 @@ void CommandHandler::multi_ () {
 void CommandHandler::exec_ () {
     if (multi) {
         multi = 0 ;
-        ss << "*0\r\n";
+        ss << "*" << QueuedCommands.size () <<  "\r\n";
+        for (auto& u: QueuedCommands) {
+            handle_command (u);
+        }
+        QueuedCommands.clear ();
     }
     else ss << "-ERR EXEC without MULTI\r\n";
 }
 
 void CommandHandler::queued_ () {
     ss << "+QUEUED\r\n";
+    QueuedCommands.push_back (OriginCommand_);
 }
 
 void CommandHandler::info_() {
