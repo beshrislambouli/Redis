@@ -126,6 +126,8 @@ void CommandHandler::do_command() {
         incr_ ();
     } else if (ty == "multi") {
         mutli_();
+    } else if (ty == "exec") {
+        exec_ ();
     }
 }
 
@@ -174,6 +176,10 @@ void CommandHandler::incr_ () {
 
 void CommandHandler::mutli_ () {
     ss << "+OK\r\n";
+}
+
+void CommandHandler::exec_ () {
+    ss << "-ERR EXEC without MULTI\r\n";
 }
 
 void CommandHandler::info_() {
