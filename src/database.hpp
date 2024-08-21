@@ -36,7 +36,7 @@ public:
     // DatabaseStream interface
     void add_stream (const std::string& key, const Value& value);
     std::optional<std::set<Value>> get_stream_set (const std::string& key);
-    std::vector <Value> get_range (const std::string& key, Value& l, Value& r);
+    std::vector <Value> get_range (const std::string& key, Value& l, Value& r, int inclusive = 1);
 private:
 
     friend class CommandHandler;

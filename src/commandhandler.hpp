@@ -32,7 +32,8 @@ private:
     void type_ ();
     void xadd_ ();
     void xrange_ ();
-    
+    void xread_ ();
+
     void propagate_();
     void Reply();
 

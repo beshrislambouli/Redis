@@ -129,7 +129,6 @@ Value DataBase::CommandToRange (const std::string& r) {
     }
     else {
         auto pt = SplitAt (r,'-');
-        std::cout << pt.first << " " << pt.second << std::endl;
         tmp.timestamp = std::stol (pt.first);
         tmp.seq = std::stoi (pt.second);
     }
@@ -139,12 +138,13 @@ Value DataBase::CommandToRange (const std::string& r) {
 }
 
 
-std::vector <Value> DataBase::get_range (const std::string& key, Value& l, Value& r) {
+std::vector <Value> DataBase::get_range (const std::string& key, Value& l, Value& r, int inclusive) {
     std::vector <Value> tmp;
     std::optional<std::set<Value>> ss = get_stream_set (key);
     if (ss.has_value()) {
         std::set<Value> s = ss.value ();
-        for ( auto it = s.lower_bound (l); it != s.end () ; it ++ ) {
+        auto it = (inclusive ? s.lower_bound (l) : s.upper_bound (l));
+        for (; it != s.end () ; it ++ ) {
             if ( r < *it ) break;
             tmp .push_back (*it);
         }

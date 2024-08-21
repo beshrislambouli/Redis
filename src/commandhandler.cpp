@@ -120,6 +120,8 @@ void CommandHandler::do_command() {
         xadd_();
     } else if (ty == "xrange") {
         xrange_ ();
+    } else if (ty == "xread") {
+        xread_ ();
     }
 }
 
@@ -215,6 +217,29 @@ void CommandHandler::xrange_ () {
         ss << "*" << value.data.size () << "\r\n";
         for (auto d: value.data) {
             ss << "$" << d.size () << "\r\n" << d << "\r\n";
+        }
+    }
+}
+
+void CommandHandler::xread_ () {
+    int num_streams = Command_.size () / 2 - 1 ;
+    ss << "*" << num_streams << "\r\n";
+    for ( int i = 2 ; i < 2 + num_streams ; i ++ ) {
+        std::string& key = Command_ [i];
+        Value l = Server_->DataBase_->CommandToRange (Command_ [i+num_streams]);
+        Value r = Server_->DataBase_->CommandToRange ("+");
+        std::vector <Value> values = Server_->DataBase_->get_range (key,l,r, 0);
+        ss << "*2\r\n";
+        ss << "$" << key.size () << "\r\n" << key << "\r\n";
+        ss << "*" << values.size () <<  "\r\n";
+        for (auto value: values) {
+            ss << "*2\r\n";
+            std::string id = std::to_string (value.id.timestamp) + "-" + std::to_string (value.id.seq);
+            ss << "$" << id.size () << "\r\n" << id << "\r\n";
+            ss << "*" << value.data.size () << "\r\n";
+            for (auto d: value.data) {
+                ss << "$" << d.size () << "\r\n" << d << "\r\n";
+            }
         }
     }
 }
