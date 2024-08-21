@@ -99,7 +99,7 @@ std::vector<std::vector<std::string>> CommandHandler::CommandParser() {
 
 void CommandHandler::do_command() {
     std::string ty = Command_[0];
-    if (multi && ty != "exec") {
+    if (multi && ty != "exec" && ty != "discard") {
         queued_ ();
     } else if (ty == "ping") {
         ping_();
