@@ -9,15 +9,6 @@ void CommandHandler::handle_command(const std::string& OriginCommand) {
     OriginCommand_ = std::move(OriginCommand);
     offset += OriginCommand_.size ();
     Commands_ = CommandParser();
-    std::cout <<"-----------------------" << std::endl;
-    for (auto command: Commands_) {
-        for (auto u :command) {
-            std::cout << u << " " ;
-        }
-        std::cout << std::endl;
-    }
-    std::cout <<"-----------------------" << std::endl;
-
     for (auto& u: Commands_) {
         Command_ = u;
         do_command();
