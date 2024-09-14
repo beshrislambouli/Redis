@@ -1,4 +1,4 @@
-In-Memory Redis-like Database | C++, Networking, Concurrent Data Structures 
+In-Memory Redis-like Database 
 
 * Developed a Redis-like high-performance key-value store built from scratch using +1500 lines of C++ code.
 * Crafted an asynchronous networking layer with ASIO for high-performance, non-blocking I/O.
